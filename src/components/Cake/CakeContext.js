@@ -1,6 +1,6 @@
-import { createContext, useContext } from "react";
+import { createContext, useContext, useState } from "react";
 import * as THREE from "three";
-import cakeInsideTexture from "../textures/cakeInsideTexture";
+import cakeInsideTexture from "../../textures/cakeInsideTexture";
 
 const cakeOuterMaterial = (color) => {
   return new THREE.MeshToonMaterial({ color });
@@ -14,6 +14,7 @@ const createCakeInnerMaterial = () => {
 };
 
 export const DEFAULT_CAKE = {
+  placementObject: null,
   parts: [
     {
       base: {
@@ -51,9 +52,31 @@ export const DEFAULT_CAKE = {
   ],
 };
 
-const CakeContext = createContext(DEFAULT_CAKE);
+const CakeContext = createContext({
+  cake: DEFAULT_CAKE,
+  /**
+   *
+   * @param {typeof DEFAULT_CAKE} cake
+   */
+  setCake: (cake) => {},
+});
 
 export const useCake = () => useContext(CakeContext);
 
-export const CakeProvider = CakeContext.Provider;
+export const CakeProvider = ({ defauleValue = DEFAULT_CAKE, children }) => {
+  const [state, setState] = useState(defauleValue);
+
+  /**
+   * @param {typeof DEFAULT_CAKE} cake
+   */
+  const setCake = (cake) => {
+    setState((prev) => ({ ...prev, ...cake }));
+  };
+
+  return (
+    <CakeContext.Provider value={{ cake: state, setCake }}>
+      {children}
+    </CakeContext.Provider>
+  );
+};
 export const CakeConsumer = CakeContext.Consumer;

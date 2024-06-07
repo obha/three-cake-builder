@@ -1,7 +1,6 @@
 import * as THREE from "three";
 
 export default function cakeInsideTexture({
-  layers = 1,
   layerThikness = 0.05,
   width = 512,
   height = 512,
@@ -14,7 +13,7 @@ export default function cakeInsideTexture({
   ctx.fillStyle = defaultFill;
 
   ctx.fill();
-  for (let i = 0; i < layers; i++) {
+  for (let i = 0; i < 100; i++) {
     if (i % 2 === 0) {
       ctx.fillStyle = "#FFBF78";
     } else {

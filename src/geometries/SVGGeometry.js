@@ -1,13 +1,10 @@
 import { Addition, Geometry } from "@react-three/csg";
-import { useLoader } from "@react-three/fiber";
 import { useMemo } from "react";
 
 import * as THREE from "three";
 import { SVGLoader } from "three/addons/loaders/SVGLoader.js";
 
-export default function SVGGeometry({ path, depth }) {
-  const svg = useLoader(SVGLoader, path);
-
+export default function SVGGeometry({ svg, depth }) {
   const config = useMemo(
     () => ({
       depth,
@@ -28,7 +25,11 @@ export default function SVGGeometry({ path, depth }) {
         );
 
         return (
-          <Addition key={index} geometry={geo} position={[-0.5, -0.5, 0]} />
+          <Addition
+            key={index}
+            geometry={geo.center()}
+            position={[-0.5, -0.5, 0]}
+          />
         );
       })}
     </Geometry>

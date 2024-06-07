@@ -1,7 +1,7 @@
-import { Base, Addition, Geometry } from "@react-three/csg";
+import { Addition, Base, Geometry } from "@react-three/csg";
 import { useMemo } from "react";
 import * as THREE from "three";
-export function ContourGeometry({
+export default function ContourGeometry({
   radius = 1,
   height = 0,
   angle = 15,
