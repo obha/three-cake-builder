@@ -21,3 +21,20 @@ export function convertShapePathToSpline(path, divisions = 3) {
 
   return new THREE.SplineCurve(points);
 }
+
+/**
+ * @param {THREE.Object3D} root
+ * @param {THREE.Object3D} node
+ */
+export function getRootNode(root, node) {
+  if (node.parent === null || node.parent.uuid === root.uuid) {
+    return node;
+  }
+
+  let parent = node.parent;
+  while (parent.parent.uuid !== root.uuid) {
+    parent = parent.parent;
+  }
+
+  return parent;
+}
