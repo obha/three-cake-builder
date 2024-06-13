@@ -18,25 +18,20 @@ function CakeScene({
 }) {
   const { scene, raycaster } = useThree();
 
-  const collisionBoxes = useRef([]);
+  const placementObjectsRef = useRef([]);
   const cakeMeshRef = useRef(new THREE.Mesh());
   const events = useMouseEvents();
   const drag = useDraggable();
   const longPress = useLongPress(5000);
 
-  const hasCollision = useCallback(
-    /**
-     *
-     * @param {THREE.Box3} box
-     * @returns {boolean}
-     */
-    (box) => {
-      return collisionBoxes.current.reduce((prev, currentBox) => {
-        return prev || currentBox.intersectsBox(box);
-      }, false);
-    },
-    []
-  );
+  const hasCollision = useCallback((object) => {
+    return placementObjectsRef.current.reduce((prev, currentObject) => {
+      const currentBox = new THREE.Box3().setFromObject(currentObject, true);
+      const objectBox = new THREE.Box3().setFromObject(object, true);
+
+      return prev || currentBox.intersectsBox(objectBox);
+    }, false);
+  }, []);
 
   const onObjectSelection = events.add(
     "click",
@@ -50,6 +45,18 @@ function CakeScene({
     }
   );
 
+  const addPlacementObject = (object) => {
+    placementObjectsRef.current.push(object);
+    scene.add(object);
+  };
+
+  const removePlacementObject = (object) => {
+    scene.remove(object);
+    placementObjectsRef.current = placementObjectsRef.current.filter(
+      (o) => o.uuid !== object.uuid
+    );
+  };
+
   const onSurfaceObjectPlacement = events.add(
     "click",
     /**
@@ -58,44 +65,43 @@ function CakeScene({
      * @returns
      */
     (intersect) => {
-      let unsubscribe = [];
-      if (placementObject) {
-        const normal = intersect.object
-          .localToWorld(intersect.face.normal)
-          .normalize();
-
-        const instance = placementObject.clone();
-
-        instance.lookAt(normal);
-
-        instance.position.set(
-          intersect.point.x,
-          intersect.point.y,
-          intersect.point.z
-        );
-
-        const boundingBox = new THREE.Box3().setFromObject(instance, true);
-
-        if (!hasCollision(boundingBox)) {
-          collisionBoxes.current.push(boundingBox);
-
-          scene.add(instance);
-
-          setSelectedObject(instance);
-
-          unsubscribe.push(onObjectSelection(instance));
-
-          const longPressEvent = longPress(instance, (intersect) => {
-            scene.remove(intersect.object);
-          });
-
-          unsubscribe.push(longPressEvent);
-        }
-
-        return () => {
-          unsubscribe.forEach((s) => s());
-        };
+      if (placementObject === null) {
+        return () => {};
       }
+
+      let unsubscribe = [];
+
+      const normal = intersect.object
+        .localToWorld(intersect.face.normal)
+        .normalize();
+
+      const instance = placementObject.clone();
+
+      instance.lookAt(normal);
+
+      instance.position.set(
+        intersect.point.x,
+        intersect.point.y,
+        intersect.point.z
+      );
+
+      if (!hasCollision(instance)) {
+        addPlacementObject(instance);
+
+        setSelectedObject(instance);
+
+        unsubscribe.push(onObjectSelection(instance));
+
+        const longPressEvent = longPress(instance, (intersect) => {
+          removePlacementObject(intersect.object);
+        });
+
+        unsubscribe.push(longPressEvent);
+      }
+
+      return () => {
+        unsubscribe.forEach((s) => s());
+      };
     }
   );
 
@@ -145,7 +151,9 @@ function CakeScene({
       rotation={[THREE.MathUtils.degToRad(-90), 0, 0]}
       layers={cake.parts}
       svgShapePath={cake.svgShapePath}
-    />
+    >
+      <meshStandardMaterial />
+    </CakeMesh>
   );
 }
 

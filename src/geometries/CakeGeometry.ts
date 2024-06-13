@@ -25,13 +25,22 @@ export default abstract class CakeGeometry extends THREE.BufferGeometry {
   protected evaluator = new Evaluator();
   private nextLayerPos = new Accumulator();
   private height = new Accumulator();
+  private baseBrush = new Brush(new THREE.BoxGeometry(0, 0, 0));
 
-  constructor(private readonly layers: any[] = []) {
+  constructor(private readonly layers: any[] = [], protected scaleCoff = 1) {
     super();
 
     this.type = "CakeGeometry";
-    this.evaluator.consolidateMaterials = true;
     this.evaluator.useGroups = true;
+  }
+
+  public getBoundingBox(): THREE.Box3 {
+    this.baseBrush.geometry.computeBoundingBox();
+    return this.baseBrush.geometry.boundingBox!;
+  }
+
+  public setScaleCoff(value: number) {
+    this.scaleCoff = value;
   }
 
   protected abstract createShapeGeometry(
@@ -40,8 +49,6 @@ export default abstract class CakeGeometry extends THREE.BufferGeometry {
   ): Brush;
 
   draw() {
-    let baseBrush = new Brush(new THREE.BoxGeometry(0, 0, 0));
-
     for (let layerIndex = 0; layerIndex < this.layers.length; layerIndex++) {
       try {
         this.height.set(this.layers[layerIndex]);
@@ -49,7 +56,7 @@ export default abstract class CakeGeometry extends THREE.BufferGeometry {
         const layers = this.layers[layerIndex].base.layers * 2 + 1;
         const depth = layers * this.layers[layerIndex].base.layerThikness;
         const scaleOffset =
-          1 + layerIndex * -this.layers[layerIndex].base.offset;
+          this.scaleCoff + layerIndex * -this.layers[layerIndex].base.offset;
         const nextLayerPos = this.nextLayerPos.set(this.layers[layerIndex - 1]);
 
         const shapeBrush = this.createShapeGeometry(
@@ -57,20 +64,48 @@ export default abstract class CakeGeometry extends THREE.BufferGeometry {
           this.layers[layerIndex].base.mat.outer
         );
 
-        shapeBrush.scale.set(scaleOffset, scaleOffset, 1);
-        shapeBrush.position.set(0, 0, nextLayerPos);
-        shapeBrush.updateMatrixWorld(true);
+        // this.layers[layerIndex].base.mat.outer;
 
-        baseBrush = this.evaluator.evaluate(baseBrush, shapeBrush, ADDITION);
+        shapeBrush.scale.set(scaleOffset, scaleOffset, 1);
+        shapeBrush.translateZ(this.height.value - nextLayerPos - depth / 2);
+        shapeBrush.updateMatrixWorld();
+
+        this.baseBrush = this.evaluator.evaluate(
+          this.baseBrush,
+          this.resolve(shapeBrush),
+          ADDITION
+        );
       } catch (error) {
         console.log(error);
       }
     }
 
-    baseBrush.geometry.computeBoundsTree();
+    this.baseBrush.geometry.computeBoundsTree();
+    this.baseBrush.geometry.computeBoundingBox();
 
-    for (let attr in baseBrush.geometry.attributes) {
-      this.setAttribute(attr, baseBrush.geometry.attributes[attr]);
+    const size = new THREE.Vector3();
+    this.getBoundingBox().getSize(size);
+    size.x = Math.min(this.scaleCoff, this.scaleCoff / size.x);
+    size.y = Math.min(this.scaleCoff, this.scaleCoff / size.y);
+
+    this.baseBrush.geometry.scale(size.x, size.y, 1);
+
+    for (let attr in this.baseBrush.geometry.attributes) {
+      this.setAttribute(attr, this.baseBrush.geometry.attributes[attr]);
     }
+  }
+
+  private resolve(op: THREE.Object3D): Brush {
+    let currentOp: THREE.Object3D = null!;
+    if (op instanceof Brush) {
+      op.updateMatrixWorld();
+      currentOp = op;
+    } else {
+      op.traverse((obj) => {
+        obj.updateMatrixWorld();
+        if (!currentOp && obj instanceof Brush) currentOp = obj;
+      });
+    }
+    return currentOp as Brush;
   }
 }

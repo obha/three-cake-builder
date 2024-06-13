@@ -13,14 +13,10 @@ export default class SVGCakeGeometry extends CakeGeometry {
     this.type = "SVGCakeGeometry";
     this.svg = svg;
     this.extrusionOptions = extrusionOptions;
-    this.evaluator.useGroups = true;
     this.draw();
   }
 
-  protected createShapeGeometry(
-    depth: number,
-    material?: THREE.Material
-  ): Brush {
+  protected createShapeGeometry(depth: number, mat?: THREE.Material): Brush {
     let base = new Brush(new THREE.BoxGeometry(0, 0, 0));
 
     for (let pathIndex in this.svg.paths) {
@@ -29,14 +25,11 @@ export default class SVGCakeGeometry extends CakeGeometry {
         { ...this.extrusionOptions, depth }
       );
 
-      const b = new Brush(extrusionGeom.center(), material);
+      const op = new Brush(extrusionGeom.center(), mat);
 
-      b.updateMatrixWorld(true);
-      console.log(b.scale);
+      op.updateMatrixWorld();
 
-      b.scale.set(1, 1, 1);
-
-      base = this.evaluator.evaluate(base, b, ADDITION);
+      base = this.evaluator.evaluate(base, op, ADDITION);
     }
 
     return base;

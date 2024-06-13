@@ -5,27 +5,35 @@ import * as THREE from "three";
 import { SVGLoader } from "three/examples/jsm/loaders/SVGLoader.js";
 
 const CakeMesh = forwardRef(function CakeMesh(
-  { svgShapePath, layers, ...otherProps },
+  {
+    svgShapePath,
+    layers,
+    children,
+    computeVertexNormals = false,
+    ...otherProps
+  },
   ref
 ) {
   const svg = useLoader(SVGLoader, svgShapePath);
 
   const mesh = useMemo(() => {
-    if (svg) {
-      const geom = new SVGCakeGeometry(layers, svg, {
-        bevelEnabled: false,
-        bevelSize: 0.1,
-        bevelThickness: 0.01,
-        bevelSegments: 3,
-      });
+    const geom = new SVGCakeGeometry(layers, svg, {
+      bevelEnabled: false,
+      bevelSize: 0.1,
+      bevelThickness: 0.01,
+      bevelSegments: 3,
+    });
 
-      return new THREE.Mesh(geom, new THREE.MeshStandardMaterial());
-    }
+    geom.computeVertexNormals();
 
-    return null;
+    return new THREE.Mesh(geom);
   }, [layers, svg]);
 
-  return <primitive ref={ref} object={mesh} {...otherProps} />;
+  return (
+    <primitive ref={ref} object={mesh} {...otherProps}>
+      {children}
+    </primitive>
+  );
 });
 
 export default CakeMesh;

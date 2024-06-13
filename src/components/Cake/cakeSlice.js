@@ -1,6 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 import * as THREE from "three";
 import cakeInsideTexture from "../../textures/cakeInsideTexture";
+import { merge } from "../../utils";
 
 const cakeOuterMaterial = (color) => {
   return new THREE.MeshToonMaterial({ color });
@@ -43,7 +44,7 @@ export default createSlice({
       {
         base: {
           offset: 0.2,
-          layers: 6,
+          layers: 20,
           layerThikness: 0.1,
           mat: {
             outer: cakeOuterMaterial(0xff0080),
@@ -58,7 +59,15 @@ export default createSlice({
       state.parts.push(action.payload);
     },
     deletePart(state, action) {
-      state.parts = state.parts.filter((_, i) => i !== action.payload);
+      state.parts = state.parts.filter((_, id) => action.payload.id !== id);
+    },
+    updatePart(state, action) {
+      state.parts = state.parts.map((layer, id) => {
+        if (action.payload.id === id) {
+          return merge(layer, action.payload.layer);
+        }
+        return layer;
+      });
     },
     setShapeSvgPath(state, action) {
       state.svgShapePath = action.payload;
