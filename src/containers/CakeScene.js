@@ -143,17 +143,25 @@ function CakeScene({
     return onSurfaceObjectPlacement(cakeMeshRef.current);
   }, [onSurfaceObjectPlacement]);
 
+  if (cake.svgContent) {
+    return (
+      <CakeMesh
+        ref={cakeMeshRef}
+        castShadow
+        position={[0, 0, 0]}
+        rotation={[THREE.MathUtils.degToRad(-90), 0, 0]}
+        layers={cake.parts}
+        svg={cake.svgContent}
+      >
+        <meshStandardMaterial />
+      </CakeMesh>
+    );
+  }
+
   return (
-    <CakeMesh
-      ref={cakeMeshRef}
-      castShadow
-      position={[0, 0, 0]}
-      rotation={[THREE.MathUtils.degToRad(-90), 0, 0]}
-      layers={cake.parts}
-      svgShapePath={cake.svgShapePath}
-    >
-      <meshStandardMaterial />
-    </CakeMesh>
+    <mesh>
+      <boxGeometry />
+    </mesh>
   );
 }
 

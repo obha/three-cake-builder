@@ -2,11 +2,11 @@ import cakeSlice from "./components/Cake/cakeSlice";
 import { loadPlacementObject } from "./containers/cakeSceneSlice";
 import store from "./store";
 
-const { setShapeSvgPath, updatePart } = cakeSlice.actions;
+const { setSvgShape, updatePart } = cakeSlice.actions;
 
 window.cakeApi = {
-  setSvgShape: function (path) {
-    store.dispatch(setShapeSvgPath(path));
+  setSvgShape: function (svg) {
+    store.dispatch(setSvgShape(svg));
   },
   setPlacementObject: function (path) {
     store.dispatch(loadPlacementObject(path));

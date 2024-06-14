@@ -17,7 +17,7 @@ const createCakeInnerMaterial = () => {
 export default createSlice({
   name: "cake",
   initialState: {
-    svgShapePath: "/assets/svg/8664845_face_grin_tongue_icon.svg",
+    svgContent: null,
     parts: [
       {
         base: {
@@ -69,8 +69,8 @@ export default createSlice({
         return layer;
       });
     },
-    setShapeSvgPath(state, action) {
-      state.svgShapePath = action.payload;
+    setSvgShape(state, action) {
+      state.svgContent = action.payload;
     },
   },
 });

@@ -5,11 +5,14 @@ import { App } from "./App";
 import "./api";
 import store from "./store";
 import "./styles.css";
+import RNDebugProvider from "./RNDebugProvider";
 
 createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <Provider store={store}>
-      <App />
-    </Provider>
+    <RNDebugProvider>
+      <Provider store={store}>
+        <App />
+      </Provider>
+    </RNDebugProvider>
   </React.StrictMode>
 );
