@@ -1,7 +1,7 @@
 import { forwardRef, useMemo } from "react";
 import * as THREE from "three";
 import { SVGLoader } from "three/examples/jsm/loaders/SVGLoader.js";
-import SVGCakeGeometry from "../../geometries/SVGCakeGeometry";
+import { SVGCakeGeometry } from "./geo";
 
 const CakeMesh = forwardRef(function CakeMesh(
   { svg, layers, children, computeVertexNormals = false, ...otherProps },
@@ -11,15 +11,18 @@ const CakeMesh = forwardRef(function CakeMesh(
 
   const mesh = useMemo(() => {
     const geom = new SVGCakeGeometry(layers, svgResutl, {
-      bevelEnabled: false,
+      bevelEnabled: true,
       bevelSize: 0.1,
-      bevelThickness: 0.01,
-      bevelSegments: 3,
+      bevelThickness: 0.03,
+      bevelSegments: 5,
     });
 
     geom.computeVertexNormals();
 
-    return new THREE.Mesh(geom);
+    return new THREE.Mesh(
+      geom,
+      new THREE.MeshToonMaterial({ color: 0xfff000 })
+    );
   }, [layers, svgResutl]);
 
   return (

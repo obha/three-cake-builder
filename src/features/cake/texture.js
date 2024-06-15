@@ -1,6 +1,6 @@
 import * as THREE from "three";
 
-export default function cakeInsideTexture({
+export function cakeInsideTexture({
   layerThikness = 0.05,
   width = 512,
   height = 512,

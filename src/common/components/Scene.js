@@ -23,16 +23,16 @@ export default function Scene({ children }) {
       <ambientLight intensity={0.5} />
 
       <AccumulativeShadows
-        position={[0, -1.16, 0]}
+        position={[0, -1, 0]}
         frames={100}
         alphaTest={0.9}
-        scale={10}
+        scale={100}
       >
         <RandomizedLight
           amount={8}
           radius={10}
           ambient={0.5}
-          position={[1, 5, -1]}
+          position={[1, 5, -8]}
         />
       </AccumulativeShadows>
       {/** PerfMon will detect performance issues */}

@@ -5,7 +5,7 @@ const RNDebugContext = createContext({ emit: () => {} });
 
 export const useRNDebug = () => useContext(RNDebugContext);
 
-const RNDebugProvider = ({ children }) => {
+export default function RNDebugProvider({ children }) {
   const emit = (message) => {
     window.ReactNativeWebView?.postMessage(JSON.stringify(message));
   };
@@ -42,6 +42,4 @@ const RNDebugProvider = ({ children }) => {
       {children}
     </RNDebugContext.Provider>
   );
-};
-
-export default RNDebugProvider;
+}

@@ -5,6 +5,7 @@ import {
   computeBoundsTree,
   disposeBoundsTree,
 } from "three-mesh-bvh";
+import { SVGLoader } from "three/examples/jsm/loaders/SVGLoader";
 
 THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
 THREE.BufferGeometry.prototype.disposeBoundsTree = disposeBoundsTree;
@@ -13,7 +14,7 @@ THREE.Mesh.prototype.raycast = acceleratedRaycast;
 class Accumulator {
   value = 0;
 
-  set(part: any) {
+  set(part) {
     if (part)
       this.value += (part.base.layers * 2 + 1) * part.base.layerThikness;
     else this.value = 0;
@@ -21,32 +22,30 @@ class Accumulator {
   }
 }
 
-export default abstract class CakeGeometry extends THREE.BufferGeometry {
-  protected evaluator = new Evaluator();
-  private nextLayerPos = new Accumulator();
-  private height = new Accumulator();
-  private baseBrush = new Brush(new THREE.BoxGeometry(0, 0, 0));
+export class CakeGeometry extends THREE.BufferGeometry {
+  evaluator = new Evaluator();
+  nextLayerPos = new Accumulator();
+  height = new Accumulator();
+  baseBrush = new Brush(new THREE.BoxGeometry(0, 0, 0));
 
-  constructor(private readonly layers: any[] = [], protected scaleCoff = 1) {
+  constructor(layers = [], scaleCoff = 1) {
     super();
-
+    this.layers = layers;
+    this.scaleCoff = scaleCoff;
     this.type = "CakeGeometry";
     this.evaluator.useGroups = true;
   }
 
-  public getBoundingBox(): THREE.Box3 {
+  getBoundingBox() {
     this.baseBrush.geometry.computeBoundingBox();
-    return this.baseBrush.geometry.boundingBox!;
+    return this.baseBrush.geometry.boundingBox;
   }
 
-  public setScaleCoff(value: number) {
+  setScaleCoff(value) {
     this.scaleCoff = value;
   }
 
-  protected abstract createShapeGeometry(
-    depth: number,
-    material?: THREE.Material
-  ): Brush;
+  createShapeGeometry(depth, material) {}
 
   draw() {
     for (let layerIndex = 0; layerIndex < this.layers.length; layerIndex++) {
@@ -95,8 +94,8 @@ export default abstract class CakeGeometry extends THREE.BufferGeometry {
     }
   }
 
-  private resolve(op: THREE.Object3D): Brush {
-    let currentOp: THREE.Object3D = null!;
+  resolve(op) {
+    let currentOp = null;
     if (op instanceof Brush) {
       op.updateMatrixWorld();
       currentOp = op;
@@ -106,6 +105,36 @@ export default abstract class CakeGeometry extends THREE.BufferGeometry {
         if (!currentOp && obj instanceof Brush) currentOp = obj;
       });
     }
-    return currentOp as Brush;
+    return currentOp;
+  }
+}
+
+export class SVGCakeGeometry extends CakeGeometry {
+  constructor(layers = [], svg, extrusionOptions) {
+    super(layers);
+    this.type = "SVGCakeGeometry";
+    this.svg = svg;
+    this.extrusionOptions = extrusionOptions;
+    this.evaluator.useGroups = true;
+    this.draw();
+  }
+
+  createShapeGeometry(depth, mat) {
+    let base = new Brush(new THREE.BoxGeometry(0, 0, 0));
+
+    for (let pathIndex in this.svg.paths) {
+      const extrusionGeom = new THREE.ExtrudeGeometry(
+        SVGLoader.createShapes(this.svg.paths[pathIndex]),
+        { ...this.extrusionOptions, depth }
+      );
+
+      const op = new Brush(extrusionGeom.center(), mat);
+
+      op.updateMatrixWorld();
+
+      base = this.evaluator.evaluate(base, op, ADDITION);
+    }
+
+    return base;
   }
 }
